@@ -1,0 +1,17 @@
+
+Power BI Data Model Relationships:
+
+Fact Table: fact_sales
+|-- dim_customer (CustomerID)
+|-- dim_product (StockCode)
+|-- dim_date (DateKey)
+|-- dim_country (Country)
+
+Dimension Tables:
+- dim_customer: Customer analytics, RFM, segmentation
+- dim_product: Product performance, pricing analysis
+- dim_date: Time intelligence, seasonal analysis
+- dim_country: Geographic analysis, regional performance
+
+Additional Tables:
+- monthly_summary: Pre-aggregated monthly metrics
