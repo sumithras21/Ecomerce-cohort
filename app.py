@@ -8,6 +8,8 @@ from src.visualization.plots import (
     plot_rfm_scatter, 
     plot_geographic_map
 )
+from src.models.forecasting import generate_forecast
+from src.visualization.forecast_plots import plot_forecast
 
 # -------------------------------
 # PAGE CONFIG
@@ -56,7 +58,7 @@ st.sidebar.title("📈 Filters & Navigation")
 # Navigation
 page = st.sidebar.radio(
     "Select View",
-    ["Executive Summary", "Customer Insights", "Geographic Analysis"]
+    ["Executive Summary", "Customer Insights", "Geographic Analysis", "Advanced Forecasting"]
 )
 
 st.sidebar.markdown("---")
@@ -136,3 +138,28 @@ elif page == "Geographic Analysis":
     st.markdown("### Top 10 Countries by Revenue")
     country_rev = filtered_df.groupby('Country')['Revenue'].sum().sort_values(ascending=False).head(10).reset_index()
     st.dataframe(country_rev.style.format({'Revenue': '${:,.2f}'}), use_container_width=True)
+
+elif page == "Advanced Forecasting":
+    st.subheader("Sales Forecasting Model (Predictive Analytics)")
+    st.markdown("Holt-Winters Exponential Smoothing model predicting next 30 days of revenue.")
+    
+    with st.spinner("Training forecasting model..."):
+        hist_df, forecast_df = generate_forecast(filtered_df, periods=30)
+    
+    if not hist_df.empty:
+        st.plotly_chart(plot_forecast(hist_df, forecast_df), use_container_width=True)
+        
+        c1, c2 = st.columns(2)
+        with c1:
+            st.markdown("### Forecast Data Export")
+            st.download_button(
+                label="Download Forecast CSV",
+                data=forecast_df.to_csv(index=False).encode('utf-8'),
+                file_name="revenue_forecast.csv",
+                mime="text/csv"
+            )
+        with c2:
+            expected_revenue = forecast_df['Forecast_Revenue'].sum()
+            st.metric("Expected Total 30-Day Revenue", f"${expected_revenue:,.2f}")
+    else:
+        st.warning("Not enough continuous temporal data for the date range selected.")

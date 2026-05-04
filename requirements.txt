@@ -4,3 +4,6 @@ streamlit
 plotly
 scikit-learn
 statsmodels
+mlxtend
+pytest
+python-dotenv
