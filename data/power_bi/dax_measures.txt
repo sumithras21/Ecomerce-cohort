@@ -1,0 +1,28 @@
+
+Power BI DAX Measures Examples:
+
+Customer Metrics:
+Total Customers = DISTINCTCOUNT(fact_sales[CustomerID])
+Active Customers = CALCULATE(DISTINCTCOUNT(fact_sales[CustomerID]), 
+                FILTER(dim_customer, dim_customer[Recency] <= 90))
+Customer Retention Rate = DIVIDE([Active Customers], [Total Customers])
+
+Revenue Metrics:
+Total Revenue = SUM(fact_sales[TotalPrice])
+Revenue LY = CALCULATE([Total Revenue], SAMEPERIODLASTYEAR(dim_date[Date]))
+Revenue Growth % = DIVIDE([Total Revenue] - [Revenue LY], [Revenue LY])
+
+Order Metrics:
+Total Orders = DISTINCTCOUNT(fact_sales[InvoiceNo])
+Avg Order Value = DIVIDE([Total Revenue], [Total Orders])
+Orders per Customer = DIVIDE([Total Orders], [Total Customers])
+
+Product Metrics:
+Top Products = TOPN(10, VALUES(dim_product[Description]), 
+              CALCULATE(SUM(fact_sales[TotalPrice]), dim_product[Description]))
+Product Diversity = DISTINCTCOUNT(fact_sales[StockCode])
+
+Time Intelligence:
+Revenue MTD = TOTALMTD([Total Revenue], dim_date[Date])
+Revenue QTD = TOTALQTD([Total Revenue], dim_date[Date])
+Revenue YTD = TOTALYTD([Total Revenue], dim_date[Date])
