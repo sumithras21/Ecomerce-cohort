@@ -1,6 +1,11 @@
 import streamlit as st
 import pandas as pd
+import os
+from dotenv import load_dotenv
 from src.data.data_loader import load_and_clean_data, get_rfm_segments
+
+# Load environment variables
+load_dotenv()
 from src.visualization.plots import (
     plot_monthly_sales, 
     plot_top_products, 
@@ -58,8 +63,14 @@ st.sidebar.title("📈 Filters & Navigation")
 # Navigation
 page = st.sidebar.radio(
     "Select View",
-    ["Executive Summary", "Customer Insights", "Geographic Analysis", "Advanced Forecasting"]
+    ["Executive Summary", "Customer Insights", "Geographic Analysis", "Advanced Forecasting", "🤖 Chat with Data"]
 )
+
+st.sidebar.markdown("---")
+with st.sidebar.popover("⚙️ Settings"):
+    st.markdown("### Configuration")
+    env_key = os.getenv("GROQ_API_KEY", "")
+    groq_api_key = st.text_input("Groq API Key", value=env_key, type="password", help="Loaded from .env or enter here manually")
 
 st.sidebar.markdown("---")
 st.sidebar.subheader("Global Filters")
@@ -163,3 +174,52 @@ elif page == "Advanced Forecasting":
             st.metric("Expected Total 30-Day Revenue", f"${expected_revenue:,.2f}")
     else:
         st.warning("Not enough continuous temporal data for the date range selected.")
+
+elif page == "🤖 Chat with Data":
+    st.subheader("🤖 Chat with your Data (Powered by LLM)")
+    st.markdown("Ask natural language questions about your revenue, customers, and products! The AI will write Pandas code to calculate the exact answer.")
+    
+    if not groq_api_key:
+        st.info("Please enter your Groq API key in the Settings popover to activate the AI Chat.")
+    else:
+        from langchain_experimental.agents.agent_toolkits.pandas.base import create_pandas_dataframe_agent
+        from langchain_groq import ChatGroq
+        
+        # Initialize LangChain agent
+        llm = ChatGroq(temperature=0, model="llama-3.3-70b-versatile", groq_api_key=groq_api_key)
+        agent = create_pandas_dataframe_agent(
+            llm, 
+            filtered_df,
+            verbose=True,
+            agent_type="tool-calling",
+            allow_dangerous_code=True
+        )
+
+        # Chat history state
+        if "chat_messages" not in st.session_state:
+            st.session_state.chat_messages = [
+                {"role": "assistant", "content": "Hi! I have access to your current Ecommerce dataset. Try asking me *'What are our top 3 best-selling products by quantity?'*"}
+            ]
+
+        # Render chat history
+        for msg in st.session_state.chat_messages:
+            with st.chat_message(msg["role"]):
+                st.markdown(msg["content"])
+
+        # Chat input
+        if prompt := st.chat_input("Ask a question about the ecommerce data..."):
+            st.session_state.chat_messages.append({"role": "user", "content": prompt})
+            with st.chat_message("user"):
+                st.markdown(prompt)
+
+            with st.chat_message("assistant"):
+                with st.spinner("Analyzing data..."):
+                    try:
+                        response = agent.invoke({"input": prompt})
+                        answer = response["output"]
+                        st.markdown(answer)
+                        st.session_state.chat_messages.append({"role": "assistant", "content": answer})
+                    except Exception as e:
+                        error_msg = f"Sorry, I encountered an error: {str(e)}"
+                        st.error(error_msg)
+                        st.session_state.chat_messages.append({"role": "assistant", "content": error_msg})
