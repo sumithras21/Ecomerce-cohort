@@ -1,16 +1,11 @@
 import pandas as pd
-import streamlit as st
 import os
 
-@st.cache_data
 def load_and_clean_data(file_path):
-    """
-    Load data from CSV and perform basic cleaning and feature engineering.
-    Cached for fast reload in Streamlit.
-    """
+    """Load data from CSV and perform basic cleaning and feature engineering."""
     if not os.path.exists(file_path):
-        st.error(f"Dataset not found at {file_path}. Please check the path.")
-        return pd.DataFrame()
+        raise FileNotFoundError(f"Dataset not found at {file_path}. Please check the path.")
+
         
     df = pd.read_csv(file_path, encoding='unicode_escape')
     
@@ -29,7 +24,6 @@ def load_and_clean_data(file_path):
     
     return df
 
-@st.cache_data
 def get_rfm_segments(df):
     """
     Calculate RFM (Recency, Frequency, Monetary) metrics and segment customers.
