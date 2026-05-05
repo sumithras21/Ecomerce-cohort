@@ -4,6 +4,7 @@ import useFilterStore from "../store/filterStore";
 import { fetchCohortRetention } from "../api/client";
 import LoadingSkeleton from "../components/ui/LoadingSkeleton";
 import ErrorAlert from "../components/ui/ErrorAlert";
+import EmptyState from "../components/ui/EmptyState";
 import clsx from "clsx";
 
 function retentionColor(value) {
@@ -27,6 +28,7 @@ export default function CohortAnalysis() {
   if (cohort.isError) return <ErrorAlert message={cohort.error?.message} onRetry={cohort.refetch} />;
 
   const { cohort_matrix, cohort_sizes, max_periods } = cohort.data;
+  if (!cohort_matrix?.length) return <EmptyState title="No cohort data" description="Not enough customer history for the selected period." />;
   const periods = Array.from({ length: Math.min(max_periods + 1, 13) }, (_, i) => i);
 
   return (

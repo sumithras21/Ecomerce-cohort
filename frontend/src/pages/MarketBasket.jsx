@@ -8,6 +8,7 @@ import { fetchBasketSummary } from "../api/client";
 import KpiCard from "../components/ui/KpiCard";
 import LoadingSkeleton from "../components/ui/LoadingSkeleton";
 import ErrorAlert from "../components/ui/ErrorAlert";
+import EmptyState from "../components/ui/EmptyState";
 
 const fmt = (n) =>
   new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(n);
@@ -23,6 +24,7 @@ export default function MarketBasket() {
   if (basket.isError) return <ErrorAlert message={basket.error?.message} onRetry={basket.refetch} />;
 
   const { top_products, product_pairs, basket_stats } = basket.data;
+  if (!top_products?.length) return <EmptyState title="No basket data" description="No orders match the selected date range." />;
   const pieData = [
     { name: "Single Product", value: basket_stats.single_product_pct },
     { name: "Multi Product", value: basket_stats.multi_product_pct },

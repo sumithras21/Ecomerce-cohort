@@ -1,5 +1,5 @@
 import io
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, HTTPException
 from fastapi.responses import StreamingResponse
 from typing import Optional
 from cachetools import TTLCache
@@ -28,7 +28,13 @@ def get_forecast(
         return _forecast_cache[key]
 
     df = get_filtered_df(start_date, end_date)
-    historical_df, forecast_df = generate_forecast(df, periods=periods)
+    try:
+        historical_df, forecast_df = generate_forecast(df, periods=periods)
+    except RuntimeError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+    if historical_df.empty or forecast_df.empty:
+        raise HTTPException(status_code=422, detail="Not enough data to build forecast.")
 
     result = ForecastResponse(
         historical=[
@@ -57,7 +63,10 @@ def export_forecast_csv(
     periods: int = Query(30, ge=7, le=90),
 ):
     df = get_filtered_df(start_date, end_date)
-    _, forecast_df = generate_forecast(df, periods=periods)
+    try:
+        _, forecast_df = generate_forecast(df, periods=periods)
+    except RuntimeError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
 
     output = io.StringIO()
     forecast_df.to_csv(output, index=False)

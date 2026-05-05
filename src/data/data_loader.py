@@ -1,6 +1,18 @@
 import pandas as pd
 import os
 
+REQUIRED_COLUMNS = {
+    "InvoiceNo",
+    "StockCode",
+    "Description",
+    "Quantity",
+    "InvoiceDate",
+    "UnitPrice",
+    "CustomerID",
+    "Country",
+}
+
+
 def load_and_clean_data(file_path):
     """Load data from CSV and perform basic cleaning and feature engineering."""
     if not os.path.exists(file_path):
@@ -8,6 +20,10 @@ def load_and_clean_data(file_path):
 
         
     df = pd.read_csv(file_path, encoding='unicode_escape')
+    missing_columns = REQUIRED_COLUMNS - set(df.columns)
+    if missing_columns:
+        missing = ", ".join(sorted(missing_columns))
+        raise ValueError(f"Dataset is missing required columns: {missing}")
     
     # 1. Cleaning
     # Drop missing CustomerID

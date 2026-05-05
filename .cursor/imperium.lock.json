@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "preset": "cursor",
+  "root": "/Users/admin/Codes/Ecomerce-cohort-main/.cursor",
+  "packages": {
+    "visual-explainer": {
+      "name": "visual-explainer",
+      "kind": "skill",
+      "version": "0.0.0",
+      "source": "github:RUSHYOP/imperium-cli",
+      "checksum": "3a8733768f394a30",
+      "installedPath": "/Users/admin/Codes/Ecomerce-cohort-main/.cursor/skills/visual-explainer",
+      "installedAt": "2026-05-05T18:21:27.391Z",
+      "lastSync": "2026-05-05T18:21:27.391Z"
+    }
+  },
+  "instructions": {}
+}

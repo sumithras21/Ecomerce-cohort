@@ -48,4 +48,4 @@ def generate_forecast(df: pd.DataFrame, periods: int = 30) -> pd.DataFrame:
         
     except Exception as e:
         logger.error(f"Failed to generate forecast: {e}")
-        return pd.DataFrame(), pd.DataFrame()
+        raise RuntimeError("Unable to generate forecast for current dataset.") from e

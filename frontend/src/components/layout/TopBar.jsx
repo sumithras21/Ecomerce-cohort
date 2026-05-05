@@ -1,21 +1,39 @@
 import DateRangePicker from "../filters/DateRangePicker";
 import useFilterStore from "../../store/filterStore";
+import Button from "../ui/Button";
+import { Menu, MoonStar, Sun } from "lucide-react";
 
-export default function TopBar({ title }) {
+export default function TopBar({ title, onMenuToggle }) {
   const { darkMode, toggleDarkMode } = useFilterStore();
 
   return (
-    <header className="flex h-14 items-center justify-between border-b border-gray-200 bg-white px-6 dark:border-gray-700 dark:bg-gray-900">
-      <h1 className="text-base font-semibold text-gray-800 dark:text-white">{title}</h1>
-      <div className="flex items-center gap-4">
-        <DateRangePicker />
-        <button
-          onClick={toggleDarkMode}
-          className="rounded-lg border border-gray-200 p-1.5 text-gray-500 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-800"
-          title="Toggle dark mode"
+    <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b border-[hsl(var(--border))] bg-[hsl(var(--card))/0.9] px-4 backdrop-blur md:px-6">
+      <div className="flex min-w-0 items-center gap-3">
+        <Button
+          onClick={onMenuToggle}
+          aria-label="Open navigation menu"
+          variant="outline"
+          size="icon"
+          className="lg:hidden"
         >
-          {darkMode ? "☀️" : "🌙"}
-        </button>
+          <Menu className="h-4 w-4" />
+        </Button>
+        <div className="min-w-0">
+          <p className="truncate text-base font-semibold">{title}</p>
+          <p className="hidden text-xs text-[hsl(var(--muted-foreground))] sm:block">Business intelligence workspace</p>
+        </div>
+      </div>
+      <div className="flex items-center gap-2 md:gap-4">
+        <DateRangePicker />
+        <Button
+          onClick={toggleDarkMode}
+          aria-label={darkMode ? "Switch to light mode" : "Switch to dark mode"}
+          variant="outline"
+          size="icon"
+          title={darkMode ? "Switch to light mode" : "Switch to dark mode"}
+        >
+          {darkMode ? <Sun className="h-4 w-4" /> : <MoonStar className="h-4 w-4" />}
+        </Button>
       </div>
     </header>
   );

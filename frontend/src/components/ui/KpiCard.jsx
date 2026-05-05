@@ -1,16 +1,24 @@
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./Card";
+
 export default function KpiCard({ title, value, subtitle, color = "blue" }) {
   const colors = {
-    blue: "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800",
-    green: "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800",
-    purple: "bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800",
-    orange: "bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800",
+    blue: "from-blue-500/10 to-blue-400/5",
+    green: "from-emerald-500/10 to-emerald-400/5",
+    purple: "from-violet-500/10 to-violet-400/5",
+    orange: "from-amber-500/10 to-amber-400/5",
   };
 
   return (
-    <div className={`rounded-xl border p-5 ${colors[color]}`}>
-      <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{title}</p>
-      <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-white">{value}</p>
-      {subtitle && <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">{subtitle}</p>}
-    </div>
+    <Card className={`bg-gradient-to-br ${colors[color]}`}>
+      <CardHeader className="pb-2">
+        <CardDescription>{title}</CardDescription>
+        <CardTitle className="text-2xl">{value}</CardTitle>
+      </CardHeader>
+      {subtitle && (
+        <CardContent>
+          <p className="text-xs text-[hsl(var(--muted-foreground))]">{subtitle}</p>
+        </CardContent>
+      )}
+    </Card>
   );
 }

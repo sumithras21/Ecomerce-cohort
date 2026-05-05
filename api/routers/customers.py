@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, Query
 from typing import Optional
+from cachetools import TTLCache
 
 from api.dependencies import get_filtered_df, app_state
 from src.data.data_loader import get_rfm_segments
@@ -9,6 +10,11 @@ from api.models.schemas import (
 )
 
 router = APIRouter(tags=["Customers"])
+_customers_cache: TTLCache = TTLCache(maxsize=32, ttl=900)
+
+
+def _cache_key(prefix: str, start_date: Optional[str], end_date: Optional[str]) -> str:
+    return f"{prefix}:{start_date}:{end_date}"
 
 
 @router.get("/customers/rfm-segments", response_model=RfmSegmentsResponse)
@@ -16,6 +22,10 @@ def get_rfm_segments_endpoint(
     start_date: Optional[str] = Query(None),
     end_date: Optional[str] = Query(None),
 ):
+    key = _cache_key("rfm", start_date, end_date)
+    if key in _customers_cache:
+        return _customers_cache[key]
+
     df = get_filtered_df(start_date, end_date)
     rfm = get_rfm_segments(df)
 
@@ -36,11 +46,13 @@ def get_rfm_segments_endpoint(
         for _, row in rfm.iterrows()
     ]
 
-    return RfmSegmentsResponse(
+    result = RfmSegmentsResponse(
         segment_counts=[SegmentCount(segment=r["segment"], count=int(r["count"]))
                         for _, r in segment_counts.iterrows()],
         scatter_data=scatter_data,
     )
+    _customers_cache[key] = result
+    return result
 
 
 @router.get("/customers/segment-stats", response_model=SegmentStatsResponse)
@@ -48,6 +60,10 @@ def get_segment_stats(
     start_date: Optional[str] = Query(None),
     end_date: Optional[str] = Query(None),
 ):
+    key = _cache_key("stats", start_date, end_date)
+    if key in _customers_cache:
+        return _customers_cache[key]
+
     df = get_filtered_df(start_date, end_date)
     rfm = get_rfm_segments(df)
 
@@ -59,7 +75,7 @@ def get_segment_stats(
         customer_count=("CustomerID", "count"),
     ).reset_index()
 
-    return SegmentStatsResponse(
+    result = SegmentStatsResponse(
         data=[
             SegmentStatRow(
                 segment=row["Customer_Segment"],
@@ -72,3 +88,5 @@ def get_segment_stats(
             for _, row in stats.iterrows()
         ]
     )
+    _customers_cache[key] = result
+    return result
