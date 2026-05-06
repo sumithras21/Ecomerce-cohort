@@ -182,17 +182,16 @@ elif page == "🤖 Chat with Data":
     if not groq_api_key:
         st.info("Please enter your Groq API key in the Settings popover to activate the AI Chat.")
     else:
-        from langchain_experimental.agents.agent_toolkits.pandas.base import create_pandas_dataframe_agent
+        from langchain_experimental.agents import create_pandas_dataframe_agent
         from langchain_groq import ChatGroq
         
         # Initialize LangChain agent
         llm = ChatGroq(temperature=0, model="llama-3.3-70b-versatile", groq_api_key=groq_api_key)
         agent = create_pandas_dataframe_agent(
-            llm, 
+            llm,
             filtered_df,
             verbose=True,
-            agent_type="tool-calling",
-            allow_dangerous_code=True
+            agent_type="zero-shot-react-description"
         )
 
         # Chat history state
