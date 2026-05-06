@@ -1,5 +1,9 @@
 import { useState } from "react";
 import clsx from "clsx";
+import { ArrowDown, ArrowUp, ChevronLeft, ChevronRight, Download, Search } from "lucide-react";
+import Button from "./Button";
+import Input from "./Input";
+import Select from "./Select";
 
 export default function DataTable({ columns, rows, pageSize = 10 }) {
   const [page, setPage] = useState(0);
@@ -50,71 +54,84 @@ export default function DataTable({ columns, rows, pageSize = 10 }) {
   };
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <input
-          type="search"
-          value={search}
-          onChange={(e) => {
-            setSearch(e.target.value);
-            setPage(0);
-          }}
-          className="w-full rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs text-gray-700 focus:outline-none sm:w-64 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
-          placeholder="Search rows..."
-          aria-label="Search table rows"
-        />
+        <div className="relative w-full sm:w-72">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[hsl(var(--muted-foreground))]" />
+          <Input
+            type="search"
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(0);
+            }}
+            className="h-9 pl-9 text-sm"
+            placeholder="Search rows..."
+            aria-label="Search table rows"
+          />
+        </div>
         <div className="flex items-center gap-2">
-          <label className="text-xs text-gray-500 dark:text-gray-400" htmlFor="rowsPerPage">Rows</label>
-          <select
+          <label className="text-xs text-[hsl(var(--muted-foreground))]" htmlFor="rowsPerPage">
+            Rows
+          </label>
+          <Select
             id="rowsPerPage"
             value={rowsPerPage}
             onChange={(e) => {
               setRowsPerPage(Number(e.target.value));
               setPage(0);
             }}
-            className="rounded-lg border border-gray-300 bg-white px-2 py-1 text-xs text-gray-700 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
+            className="h-9 w-20 text-xs"
           >
             {[10, 20, 50].map((size) => (
               <option key={size} value={size}>
                 {size}
               </option>
             ))}
-          </select>
-        <button
-          onClick={exportCsv}
-          className="rounded-lg border border-gray-300 px-3 py-1 text-xs text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-400 dark:hover:bg-gray-800"
-        >
-          Export CSV
-        </button>
+          </Select>
+          <Button onClick={exportCsv} variant="outline" size="sm" className="h-9">
+            <Download className="h-3.5 w-3.5" />
+            CSV
+          </Button>
         </div>
       </div>
-      <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700">
+      <div className="overflow-x-auto rounded-xl border border-[hsl(var(--border))]">
         <table className="w-full text-sm">
-          <thead className="sticky top-0 bg-gray-50 dark:bg-gray-800">
+          <thead className="sticky top-0 bg-[hsl(var(--muted))]">
             <tr>
-              {columns.map((col) => (
-                <th
-                  key={col.key}
-                  onClick={() => col.sortable !== false && handleSort(col.key)}
-                  className={clsx(
-                    "px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300",
-                    col.sortable !== false && "cursor-pointer hover:text-gray-900 dark:hover:text-white"
-                  )}
-                >
-                  {col.label}
-                  {sortKey === col.key && (sortAsc ? " ▲" : " ▼")}
-                </th>
-              ))}
+              {columns.map((col) => {
+                const sortable = col.sortable !== false;
+                return (
+                  <th
+                    key={col.key}
+                    onClick={() => sortable && handleSort(col.key)}
+                    className={clsx(
+                      "px-4 py-3 text-left font-medium text-[hsl(var(--muted-foreground))]",
+                      sortable && "cursor-pointer select-none hover:text-[hsl(var(--foreground))]"
+                    )}
+                  >
+                    <span className="inline-flex items-center gap-1">
+                      {col.label}
+                      {sortKey === col.key && (
+                        sortAsc ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
+                      )}
+                    </span>
+                  </th>
+                );
+              })}
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+          <tbody className="divide-y divide-[hsl(var(--border))]">
             {visible.map((row, i) => (
-              <tr key={i} className="bg-white hover:bg-gray-50 dark:bg-gray-900 dark:hover:bg-gray-800">
+              <tr
+                key={i}
+                className="bg-[hsl(var(--card))] transition-colors hover:bg-[hsl(var(--muted))]"
+              >
                 {columns.map((col) => (
                   <td
                     key={col.key}
                     className={clsx(
-                      "px-4 py-3 text-gray-900 dark:text-gray-100",
+                      "px-4 py-3 text-[hsl(var(--foreground))]",
                       typeof row[col.key] === "number" && "text-right tabular-nums"
                     )}
                   >
@@ -127,17 +144,31 @@ export default function DataTable({ columns, rows, pageSize = 10 }) {
         </table>
       </div>
       {total > 1 && (
-        <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
-          <span>Page {currentPage + 1} of {total}</span>
-          <div className="flex gap-2">
-            <button disabled={currentPage === 0} onClick={() => setPage(currentPage - 1)}
-              className="rounded px-2 py-1 disabled:opacity-40 hover:bg-gray-100 dark:hover:bg-gray-800">
-              ‹ Prev
-            </button>
-            <button disabled={currentPage === total - 1} onClick={() => setPage(currentPage + 1)}
-              className="rounded px-2 py-1 disabled:opacity-40 hover:bg-gray-100 dark:hover:bg-gray-800">
-              Next ›
-            </button>
+        <div className="flex items-center justify-between text-xs text-[hsl(var(--muted-foreground))]">
+          <span>
+            Page {currentPage + 1} of {total}
+          </span>
+          <div className="flex gap-1">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={currentPage === 0}
+              onClick={() => setPage(currentPage - 1)}
+              aria-label="Previous page"
+            >
+              <ChevronLeft className="h-3.5 w-3.5" />
+              Prev
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={currentPage === total - 1}
+              onClick={() => setPage(currentPage + 1)}
+              aria-label="Next page"
+            >
+              Next
+              <ChevronRight className="h-3.5 w-3.5" />
+            </Button>
           </div>
         </div>
       )}

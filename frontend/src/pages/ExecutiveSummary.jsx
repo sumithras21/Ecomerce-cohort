@@ -3,17 +3,22 @@ import {
   LineChart, Line, BarChart, Bar,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
+import { LayoutDashboard } from "lucide-react";
 import useFilterStore from "../store/filterStore";
 import { fetchKpis, fetchMonthlySales, fetchTopProducts } from "../api/client";
 import KpiCard from "../components/ui/KpiCard";
 import LoadingSkeleton from "../components/ui/LoadingSkeleton";
 import ErrorAlert from "../components/ui/ErrorAlert";
+import PageHeader from "../components/ui/PageHeader";
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/Card";
+import useChartTheme from "../lib/useChartTheme";
 
 const fmt = (n) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(n);
 const fmtNum = (n) => new Intl.NumberFormat("en-US").format(n);
 
 export default function ExecutiveSummary() {
   const { startDate, endDate } = useFilterStore();
+  const theme = useChartTheme();
 
   const kpis = useQuery({ queryKey: ["kpis", startDate, endDate], queryFn: () => fetchKpis(startDate, endDate) });
   const monthly = useQuery({ queryKey: ["monthly-sales", startDate, endDate], queryFn: () => fetchMonthlySales(startDate, endDate) });
@@ -21,7 +26,12 @@ export default function ExecutiveSummary() {
 
   return (
     <div className="space-y-6">
-      {/* KPI Cards */}
+      <PageHeader
+        title="Executive Summary"
+        description="Snapshot of revenue, orders, customers and best-selling products."
+        icon={LayoutDashboard}
+      />
+
       {kpis.isLoading ? (
         <LoadingSkeleton type="kpis" />
       ) : kpis.isError ? (
@@ -35,45 +45,55 @@ export default function ExecutiveSummary() {
         </div>
       )}
 
-      {/* Monthly Sales Trend */}
-      <div className="rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-900">
-        <h2 className="mb-4 text-sm font-semibold text-gray-700 dark:text-gray-200">Monthly Sales Trend</h2>
-        {monthly.isLoading ? <LoadingSkeleton /> : monthly.isError ? (
-          <ErrorAlert message={monthly.error?.message} onRetry={monthly.refetch} />
-        ) : (
-          <ResponsiveContainer width="100%" height={260}>
-            <LineChart data={monthly.data.data} margin={{ top: 5, right: 20, bottom: 5, left: 10 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis dataKey="year_month" tick={{ fontSize: 11 }} />
-              <YAxis tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} tick={{ fontSize: 11 }} />
-              <Tooltip formatter={(v) => fmt(v)} />
-              <Line type="monotone" dataKey="revenue" stroke="#3b82f6" strokeWidth={2} dot={false} />
-            </LineChart>
-          </ResponsiveContainer>
-        )}
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Monthly Sales Trend</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {monthly.isLoading ? (
+            <LoadingSkeleton />
+          ) : monthly.isError ? (
+            <ErrorAlert message={monthly.error?.message} onRetry={monthly.refetch} />
+          ) : (
+            <ResponsiveContainer width="100%" height={260}>
+              <LineChart data={monthly.data.data} margin={{ top: 5, right: 20, bottom: 5, left: 10 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke={theme.grid} />
+                <XAxis dataKey="year_month" tick={{ fontSize: 11, fill: theme.axis }} stroke={theme.axis} />
+                <YAxis tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} tick={{ fontSize: 11, fill: theme.axis }} stroke={theme.axis} />
+                <Tooltip formatter={(v) => fmt(v)} {...theme.tooltip} />
+                <Line type="monotone" dataKey="revenue" stroke={theme.primary} strokeWidth={2} dot={false} />
+              </LineChart>
+            </ResponsiveContainer>
+          )}
+        </CardContent>
+      </Card>
 
-      {/* Top Products */}
-      <div className="rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-900">
-        <h2 className="mb-4 text-sm font-semibold text-gray-700 dark:text-gray-200">Top 10 Products by Revenue</h2>
-        {products.isLoading ? <LoadingSkeleton /> : products.isError ? (
-          <ErrorAlert message={products.error?.message} onRetry={products.refetch} />
-        ) : (
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart
-              layout="vertical"
-              data={[...products.data.data].reverse()}
-              margin={{ top: 5, right: 20, bottom: 5, left: 160 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis type="number" tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} tick={{ fontSize: 11 }} />
-              <YAxis type="category" dataKey="description" tick={{ fontSize: 10 }} width={155} />
-              <Tooltip formatter={(v) => fmt(v)} />
-              <Bar dataKey="revenue" fill="#6366f1" radius={[0, 4, 4, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        )}
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Top 10 Products by Revenue</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {products.isLoading ? (
+            <LoadingSkeleton height={300} />
+          ) : products.isError ? (
+            <ErrorAlert message={products.error?.message} onRetry={products.refetch} />
+          ) : (
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart
+                layout="vertical"
+                data={[...products.data.data].reverse()}
+                margin={{ top: 5, right: 20, bottom: 5, left: 160 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke={theme.grid} />
+                <XAxis type="number" tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} tick={{ fontSize: 11, fill: theme.axis }} stroke={theme.axis} />
+                <YAxis type="category" dataKey="description" tick={{ fontSize: 10, fill: theme.axis }} width={155} stroke={theme.axis} />
+                <Tooltip formatter={(v) => fmt(v)} {...theme.tooltip} />
+                <Bar dataKey="revenue" fill={theme.accent} radius={[0, 4, 4, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

@@ -1,8 +1,21 @@
-export default function EmptyState({ title = "No data available", description = "Try changing filters and retry." }) {
+import { Inbox } from "lucide-react";
+
+export default function EmptyState({
+  title = "No data available",
+  description = "Try changing filters and retry.",
+  icon: Icon = Inbox,
+  action,
+}) {
   return (
-    <div className="rounded-xl border border-gray-200 bg-gray-50 p-6 text-center dark:border-gray-700 dark:bg-gray-800/60">
-      <p className="text-sm font-medium text-gray-700 dark:text-gray-200">{title}</p>
-      <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{description}</p>
+    <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-[hsl(var(--border))] bg-[hsl(var(--muted))]/40 p-10 text-center">
+      <span className="rounded-full bg-[hsl(var(--card))] p-3 text-[hsl(var(--muted-foreground))] shadow-sm">
+        <Icon className="h-5 w-5" />
+      </span>
+      <div>
+        <p className="text-sm font-medium text-[hsl(var(--foreground))]">{title}</p>
+        <p className="mt-1 text-xs text-[hsl(var(--muted-foreground))]">{description}</p>
+      </div>
+      {action}
     </div>
   );
 }

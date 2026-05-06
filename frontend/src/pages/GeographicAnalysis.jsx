@@ -4,11 +4,15 @@ import {
   ComposableMap, Geographies, Geography, ZoomableGroup,
 } from "react-simple-maps";
 import { scaleLinear } from "d3-scale";
+import { Globe } from "lucide-react";
 import useFilterStore from "../store/filterStore";
+import useChartTheme from "../lib/useChartTheme";
 import { fetchGeoMap, fetchTopCountries } from "../api/client";
 import DataTable from "../components/ui/DataTable";
 import LoadingSkeleton from "../components/ui/LoadingSkeleton";
 import ErrorAlert from "../components/ui/ErrorAlert";
+import PageHeader from "../components/ui/PageHeader";
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/Card";
 
 const GEO_URL = "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json";
 
@@ -25,6 +29,7 @@ const TABLE_COLS = [
 
 export default function GeographicAnalysis() {
   const { startDate, endDate } = useFilterStore();
+  const { darkMode } = useChartTheme();
   const [tooltipContent, setTooltipContent] = useState("");
 
   const geoMap = useQuery({ queryKey: ["geo-map", startDate, endDate], queryFn: () => fetchGeoMap(startDate, endDate) });
@@ -34,57 +39,78 @@ export default function GeographicAnalysis() {
     (geoMap.data?.data ?? []).map((d) => [d.country, d.revenue])
   );
   const maxRevenue = Math.max(...Object.values(revenueByCountry), 1);
-  const colorScale = scaleLinear().domain([0, maxRevenue]).range(["#dbeafe", "#1d4ed8"]);
+  const colorScale = scaleLinear()
+    .domain([0, maxRevenue])
+    .range(darkMode ? ["#1e3a8a", "#60a5fa"] : ["#dbeafe", "#1d4ed8"]);
+
+  const emptyFill = darkMode ? "#1f2937" : "#f1f5f9";
+  const stroke = darkMode ? "#374151" : "#cbd5e1";
 
   return (
     <div className="space-y-6">
-      {/* Map */}
-      <div className="rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-900">
-        <h2 className="mb-1 text-sm font-semibold text-gray-700 dark:text-gray-200">Revenue by Country</h2>
-        {tooltipContent && (
-          <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">{tooltipContent}</p>
-        )}
-        {geoMap.isLoading ? <LoadingSkeleton /> : geoMap.isError ? (
-          <ErrorAlert message={geoMap.error?.message} onRetry={geoMap.refetch} />
-        ) : (
-          <ComposableMap projectionConfig={{ scale: 140 }} height={340}>
-            <ZoomableGroup>
-              <Geographies geography={GEO_URL}>
-                {({ geographies }) =>
-                  geographies.map((geo) => {
-                    const name = geo.properties.name;
-                    const rev = revenueByCountry[name] ?? 0;
-                    return (
-                      <Geography
-                        key={geo.rsmKey}
-                        geography={geo}
-                        fill={rev > 0 ? colorScale(rev) : "#f1f5f9"}
-                        stroke="#cbd5e1"
-                        strokeWidth={0.3}
-                        onMouseEnter={() =>
-                          setTooltipContent(rev > 0 ? `${name}: ${fmt(rev)}` : name)
-                        }
-                        onMouseLeave={() => setTooltipContent("")}
-                        style={{ hover: { fill: "#f59e0b", outline: "none" }, pressed: { outline: "none" } }}
-                      />
-                    );
-                  })
-                }
-              </Geographies>
-            </ZoomableGroup>
-          </ComposableMap>
-        )}
-      </div>
+      <PageHeader
+        title="Geographic Analysis"
+        description="Revenue distribution and top-performing countries across the world."
+        icon={Globe}
+      />
 
-      {/* Top Countries Table */}
-      <div className="rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-900">
-        <h2 className="mb-4 text-sm font-semibold text-gray-700 dark:text-gray-200">Top Countries</h2>
-        {topCountries.isLoading ? <LoadingSkeleton /> : topCountries.isError ? (
-          <ErrorAlert message={topCountries.error?.message} onRetry={topCountries.refetch} />
-        ) : (
-          <DataTable columns={TABLE_COLS} rows={topCountries.data.data} />
-        )}
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Revenue by Country</CardTitle>
+          {tooltipContent && (
+            <p className="text-xs text-[hsl(var(--muted-foreground))]">{tooltipContent}</p>
+          )}
+        </CardHeader>
+        <CardContent>
+          {geoMap.isLoading ? (
+            <LoadingSkeleton height={340} />
+          ) : geoMap.isError ? (
+            <ErrorAlert message={geoMap.error?.message} onRetry={geoMap.refetch} />
+          ) : (
+            <ComposableMap projectionConfig={{ scale: 140 }} height={340}>
+              <ZoomableGroup>
+                <Geographies geography={GEO_URL}>
+                  {({ geographies }) =>
+                    geographies.map((geo) => {
+                      const name = geo.properties.name;
+                      const rev = revenueByCountry[name] ?? 0;
+                      return (
+                        <Geography
+                          key={geo.rsmKey}
+                          geography={geo}
+                          fill={rev > 0 ? colorScale(rev) : emptyFill}
+                          stroke={stroke}
+                          strokeWidth={0.3}
+                          onMouseEnter={() =>
+                            setTooltipContent(rev > 0 ? `${name}: ${fmt(rev)}` : name)
+                          }
+                          onMouseLeave={() => setTooltipContent("")}
+                          style={{ hover: { fill: "#f59e0b", outline: "none" }, pressed: { outline: "none" } }}
+                        />
+                      );
+                    })
+                  }
+                </Geographies>
+              </ZoomableGroup>
+            </ComposableMap>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Top Countries</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {topCountries.isLoading ? (
+            <LoadingSkeleton type="table" />
+          ) : topCountries.isError ? (
+            <ErrorAlert message={topCountries.error?.message} onRetry={topCountries.refetch} />
+          ) : (
+            <DataTable columns={TABLE_COLS} rows={topCountries.data.data} />
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
