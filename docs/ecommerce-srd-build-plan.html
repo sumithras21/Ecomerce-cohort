@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ecommerce BI Platform SRD and Build Plan</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <style>
+    :root {
+      --font-body: "IBM Plex Sans", system-ui, sans-serif;
+      --font-mono: "IBM Plex Mono", "SF Mono", Consolas, monospace;
+      --bg: #f3f8fb;
+      --surface: #ffffff;
+      --surface2: #ecf3f7;
+      --surface-elevated: #fafdff;
+      --border: rgba(0, 0, 0, 0.08);
+      --border-bright: rgba(0, 0, 0, 0.15);
+      --text: #0f172a;
+      --text-dim: #546375;
+      --accent: #0369a1;
+      --accent-dim: rgba(3, 105, 161, 0.1);
+      --teal: #0f766e;
+      --teal-dim: rgba(15, 118, 110, 0.1);
+      --amber: #b45309;
+      --amber-dim: rgba(180, 83, 9, 0.1);
+      --green: #166534;
+      --green-dim: rgba(22, 101, 52, 0.1);
+      --rose: #9f1239;
+      --rose-dim: rgba(159, 18, 57, 0.1);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0b141c;
+        --surface: #13202c;
+        --surface2: #192a38;
+        --surface-elevated: #1d3242;
+        --border: rgba(255, 255, 255, 0.08);
+        --border-bright: rgba(255, 255, 255, 0.16);
+        --text: #e4eef8;
+        --text-dim: #9db2c6;
+        --accent: #38bdf8;
+        --accent-dim: rgba(56, 189, 248, 0.13);
+        --teal: #5eead4;
+        --teal-dim: rgba(94, 234, 212, 0.12);
+        --amber: #fbbf24;
+        --amber-dim: rgba(251, 191, 36, 0.13);
+        --green: #4ade80;
+        --green-dim: rgba(74, 222, 128, 0.13);
+        --rose: #fb7185;
+        --rose-dim: rgba(251, 113, 133, 0.13);
+      }
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--text);
+      font-family: var(--font-body);
+      background: var(--bg);
+      background-image:
+        radial-gradient(ellipse at 12% 0%, var(--accent-dim) 0%, transparent 45%),
+        radial-gradient(ellipse at 88% 100%, var(--teal-dim) 0%, transparent 45%);
+      padding: 32px 42px;
+    }
+
+    .wrap {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 190px 1fr;
+      gap: 0 36px;
+    }
+    .main { min-width: 0; }
+
+    .toc {
+      position: sticky;
+      top: 20px;
+      align-self: start;
+      max-height: calc(100dvh - 40px);
+      overflow-y: auto;
+      padding: 12px 0;
+      grid-row: 1 / -1;
+    }
+    .toc-title {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.8px;
+      color: var(--text-dim);
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 10px;
+      padding-bottom: 10px;
+      font-weight: 600;
+    }
+    .toc a {
+      display: block;
+      text-decoration: none;
+      color: var(--text-dim);
+      border-left: 2px solid transparent;
+      border-radius: 5px;
+      padding: 5px 8px;
+      font-size: 12px;
+      line-height: 1.35;
+      margin-bottom: 2px;
+      transition: all 0.15s ease;
+    }
+    .toc a:hover { color: var(--text); background: var(--surface2); }
+    .toc a.active { color: var(--text); border-left-color: var(--accent); background: var(--surface2); }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 40px;
+      letter-spacing: -0.8px;
+      text-wrap: balance;
+    }
+    .subtitle {
+      margin: 0 0 24px;
+      color: var(--text-dim);
+      font-family: var(--font-mono);
+      font-size: 13px;
+    }
+    .lead {
+      margin: 0 0 26px;
+      padding: 16px 18px;
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      border-radius: 0 10px 10px 0;
+      background: var(--surface-elevated);
+      line-height: 1.65;
+      color: var(--text-dim);
+    }
+
+    .kpis {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(120px, 1fr));
+      gap: 12px;
+      margin-bottom: 22px;
+    }
+    .kpi {
+      background: var(--surface-elevated);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    }
+    .kpi .value {
+      font-size: 30px;
+      font-weight: 700;
+      line-height: 1.1;
+      font-variant-numeric: tabular-nums;
+    }
+    .kpi .label {
+      margin-top: 5px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.1px;
+      color: var(--text-dim);
+    }
+
+    .sec-head {
+      margin: 26px 0 12px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 1.4px;
+      text-transform: uppercase;
+      color: var(--accent);
+      scroll-margin-top: 70px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px;
+      margin-bottom: 14px;
+      min-width: 0;
+    }
+    .card h3 {
+      margin: 0 0 9px;
+      font-size: 20px;
+      letter-spacing: -0.2px;
+    }
+    .card p {
+      margin: 0;
+      color: var(--text-dim);
+      line-height: 1.65;
+      overflow-wrap: break-word;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    ul.clean {
+      margin: 10px 0 0;
+      padding: 0;
+      list-style: none;
+    }
+    ul.clean li {
+      position: relative;
+      padding-left: 14px;
+      margin-bottom: 8px;
+      color: var(--text-dim);
+      line-height: 1.5;
+      overflow-wrap: break-word;
+    }
+    ul.clean li::before {
+      content: ">";
+      position: absolute;
+      left: 0;
+      color: var(--text-dim);
+      font-family: var(--font-mono);
+      font-weight: 600;
+    }
+
+    .mermaid-wrap {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface);
+      padding: 12px;
+      margin-bottom: 14px;
+    }
+    .zoom-controls {
+      display: flex;
+      justify-content: flex-end;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+    .zoom-controls button {
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      color: var(--text);
+      border-radius: 6px;
+      padding: 5px 8px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      cursor: pointer;
+    }
+    .mermaid-stage {
+      min-height: 300px;
+      overflow: auto;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      cursor: default;
+    }
+    .mermaid-inner {
+      transform-origin: center top;
+      transition: transform 0.18s ease;
+      user-select: none;
+    }
+    .mermaid .node rect, .mermaid .node polygon, .mermaid .node path {
+      stroke-width: 1.2px !important;
+    }
+
+    .table-wrap {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+    .table-scroll { overflow-x: auto; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    th {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      text-align: left;
+      padding: 12px 14px;
+      background: var(--surface2);
+      border-bottom: 2px solid var(--border-bright);
+      color: var(--text-dim);
+      font-family: var(--font-mono);
+      text-transform: uppercase;
+      font-size: 10px;
+      letter-spacing: 1.1px;
+      white-space: nowrap;
+    }
+    td {
+      padding: 11px 14px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+      overflow-wrap: break-word;
+    }
+    tbody tr:nth-child(even) { background: var(--accent-dim); }
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 10px;
+      font-family: var(--font-mono);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+    .status::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: currentColor;
+    }
+    .ok { background: var(--green-dim); color: var(--green); }
+    .plan { background: var(--amber-dim); color: var(--amber); }
+    .risk { background: var(--rose-dim); color: var(--rose); }
+
+    code {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      background: var(--accent-dim);
+      color: var(--accent);
+      padding: 1px 5px;
+      border-radius: 4px;
+    }
+
+    details {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 10px;
+    }
+    summary {
+      cursor: pointer;
+      padding: 12px 14px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      background: var(--surface);
+      font-weight: 600;
+    }
+    details > div {
+      border-top: 1px solid var(--border);
+      background: var(--surface2);
+      color: var(--text-dim);
+      padding: 12px 14px;
+      line-height: 1.6;
+    }
+
+    @media (max-width: 1000px) {
+      body { padding: 0; }
+      .wrap { grid-template-columns: 1fr; }
+      .toc {
+        position: sticky;
+        top: 0;
+        z-index: 200;
+        display: flex;
+        gap: 4px;
+        overflow-x: auto;
+        background: var(--bg);
+        border-bottom: 1px solid var(--border);
+        max-height: none;
+        margin: 0;
+        padding: 10px 16px;
+      }
+      .toc-title { display: none; }
+      .toc a {
+        white-space: nowrap;
+        border-left: none;
+        border-bottom: 2px solid transparent;
+        border-radius: 4px 4px 0 0;
+        font-size: 10px;
+        padding: 6px 8px;
+      }
+      .toc a.active {
+        border-left: none;
+        border-bottom-color: var(--accent);
+      }
+      .main { padding: 20px 16px 24px; }
+      h1 { font-size: 30px; }
+      .kpis { grid-template-columns: 1fr 1fr; }
+      .grid-2 { grid-template-columns: 1fr; }
+      .sec-head { scroll-margin-top: 56px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <nav class="toc" id="toc">
+      <div class="toc-title">Contents</div>
+      <a href="#s1">1. Vision</a>
+      <a href="#s2">2. Scope & Modules</a>
+      <a href="#s3">3. Future Architecture</a>
+      <a href="#s4">4. API Contract</a>
+      <a href="#s5">5. Data & ML Design</a>
+      <a href="#s6">6. Build Phases</a>
+      <a href="#s7">7. QA & Release</a>
+      <a href="#s8">8. Risks & Mitigations</a>
+    </nav>
+
+    <main class="main">
+      <h1>Ecommerce Analytics Platform<br>Software Requirements Document + Build Plan</h1>
+      <p class="subtitle">future-state blueprint | prepared before implementation kickoff | backend + frontend + ai assistant</p>
+      <p class="lead">
+        This document will define how the project will be built from zero to production readiness. It will describe what the platform will do, how each module will behave, how services will integrate, and how delivery will be sequenced. Every requirement is written in future tense to serve as a source-of-truth implementation guide.
+      </p>
+
+      <div class="kpis">
+        <div class="kpi"><div class="value">7</div><div class="label">Analytics Modules Planned</div></div>
+        <div class="kpi"><div class="value">14+</div><div class="label">API Endpoints to Deliver</div></div>
+        <div class="kpi"><div class="value">3</div><div class="label">Core Data Services</div></div>
+        <div class="kpi"><div class="value">6</div><div class="label">Delivery Phases</div></div>
+      </div>
+
+      <div id="s1" class="sec-head">1 - Product Vision and Objectives</div>
+      <div class="card">
+        <h3>Strategic Outcome</h3>
+        <p>
+          The platform will provide a unified Business Intelligence workspace for ecommerce teams. It will convert raw retail transactions into decision-grade insights across executive KPIs, customer behavior, geography, sales forecasting, market basket affinity, cohort retention, and natural-language analytics chat.
+        </p>
+        <ul class="clean">
+          <li>The system will expose all analytics via a FastAPI backend and a React web dashboard.</li>
+          <li>The frontend will offer date-range filtering and route-based module navigation.</li>
+          <li>The backend will standardize typed JSON responses with Pydantic schemas.</li>
+          <li>The chat assistant will support secure opt-in pandas-agent analysis for trusted local environments.</li>
+        </ul>
+      </div>
+
+      <div id="s2" class="sec-head">2 - Functional Scope and Modules</div>
+      <div class="table-wrap">
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Module</th>
+                <th>Future Capability</th>
+                <th>Primary Endpoint(s)</th>
+                <th>Frontend Route</th>
+                <th>Delivery Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Executive Summary</td>
+                <td>Will show total revenue, orders, customers, AOV, monthly trend, top products.</td>
+                <td><code>/summary/kpis</code>, <code>/summary/monthly-sales</code>, <code>/summary/top-products</code></td>
+                <td><code>/</code></td>
+                <td><span class="status plan">Planned</span></td>
+              </tr>
+              <tr>
+                <td>Customer Insights</td>
+                <td>Will compute RFM scoring, segment distribution, scatter analysis, segment rollups.</td>
+                <td><code>/customers/rfm-segments</code>, <code>/customers/segment-stats</code></td>
+                <td><code>/customers</code></td>
+                <td><span class="status plan">Planned</span></td>
+              </tr>
+              <tr>
+                <td>Geographic Analysis</td>
+                <td>Will provide country revenue map and top-country commerce metrics.</td>
+                <td><code>/geographic/map</code>, <code>/geographic/top-countries</code></td>
+                <td><code>/geographic</code></td>
+                <td><span class="status plan">Planned</span></td>
+              </tr>
+              <tr>
+                <td>Forecasting</td>
+                <td>Will deliver Holt-Winters revenue forecast, historical alignment, and CSV export.</td>
+                <td><code>/forecast/generate</code>, <code>/forecast/export-csv</code></td>
+                <td><code>/forecast</code></td>
+                <td><span class="status plan">Planned</span></td>
+              </tr>
+              <tr>
+                <td>Market Basket</td>
+                <td>Will compute top products, pair affinity, and basket-level summary statistics.</td>
+                <td><code>/basket/summary</code></td>
+                <td><code>/basket</code></td>
+                <td><span class="status plan">Planned</span></td>
+              </tr>
+              <tr>
+                <td>Cohort Retention</td>
+                <td>Will calculate cohort matrix and month-over-month retention curves.</td>
+                <td><code>/cohort/retention</code></td>
+                <td><code>/cohort</code></td>
+                <td><span class="status plan">Planned</span></td>
+              </tr>
+              <tr>
+                <td>AI Chat Assistant</td>
+                <td>Will answer dataset questions via guarded LLM + dataframe agent execution.</td>
+                <td><code>/chat</code> (POST)</td>
+                <td><code>/chat</code></td>
+                <td><span class="status risk">Controlled Enablement</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="s3" class="sec-head">3 - Future Architecture and Runtime Flow</div>
+      <div class="mermaid-wrap">
+        <div class="zoom-controls">
+          <button data-zoom="in">+</button>
+          <button data-zoom="out">-</button>
+          <button data-zoom="reset">reset</button>
+        </div>
+        <div class="mermaid-stage" id="stage">
+          <div class="mermaid-inner" id="diagramRoot">
+            <div class="mermaid">
+              flowchart TD
+                A["React Dashboard<br/><small>Vite + React Router + React Query</small>"] --> B["FastAPI Gateway<br/><small>Request ID + CORS + Rate Limit</small>"]
+                B --> C["Summary / Customer / Geo Routers"]
+                B --> D["Forecast / Basket / Cohort Routers"]
+                B --> E["Chat Router<br/><small>env-gated LLM mode</small>"]
+                C --> F["Shared Dependency Layer<br/><small>date parsing + app_state + filtering</small>"]
+                D --> F
+                E --> F
+                F --> G["Data Loader Service<br/><small>load_and_clean_data()</small>"]
+                F --> H["Analytics Services<br/><small>cohort + basket + forecasting</small>"]
+                H --> I["Typed Response Schemas<br/><small>Pydantic contracts</small>"]
+                G --> I
+                I --> A
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3>Platform Characteristics</h3>
+          <ul class="clean">
+            <li>Startup lifecycle will preload dataset and precompute RFM baseline.</li>
+            <li>All routers will consume a unified filtered dataframe dependency.</li>
+            <li>Rate limiting will protect expensive routes: chat, forecast, basket.</li>
+            <li>Short-lived in-memory TTL caches will reduce repeat query cost.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Non-Functional Targets</h3>
+          <ul class="clean">
+            <li>API p95 latency target will stay under 800ms for non-chat endpoints.</li>
+            <li>Frontend route transition should render meaningful skeletons within 200ms.</li>
+            <li>All responses will include request traceability through <code>x-request-id</code>.</li>
+            <li>Operational logs will emit structured context for errors and model failures.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div id="s4" class="sec-head">4 - API Contract and Security Rules</div>
+      <div class="table-wrap">
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Area</th>
+                <th>Future Requirement</th>
+                <th>Rule Type</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Date Filtering</td>
+                <td>All analytic endpoints will accept optional <code>start_date</code> and <code>end_date</code> in ISO format and will reject invalid or reversed ranges with HTTP 422.</td>
+                <td><span class="status ok">Validation</span></td>
+              </tr>
+              <tr>
+                <td>Error Envelope</td>
+                <td>Unhandled failures will return a stable JSON envelope with a user-safe message, while internal details remain in logs.</td>
+                <td><span class="status ok">Reliability</span></td>
+              </tr>
+              <tr>
+                <td>CORS Policy</td>
+                <td>Local dashboard origins will be allowlisted; deployment profile will move to explicit environment-driven origins.</td>
+                <td><span class="status plan">Hardening</span></td>
+              </tr>
+              <tr>
+                <td>Chat Controls</td>
+                <td>Chat execution will remain disabled by default and will only run when <code>CHAT_ALLOW_DANGEROUS_CODE=true</code> in trusted local environments.</td>
+                <td><span class="status risk">Security Gate</span></td>
+              </tr>
+              <tr>
+                <td>Rate Limits</td>
+                <td>Per-IP request buckets will throttle high-cost routes over a 60-second window and return HTTP 429 when exceeded.</td>
+                <td><span class="status ok">Abuse Prevention</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="s5" class="sec-head">5 - Data Engineering and Modeling Plan</div>
+      <div class="grid-2">
+        <div class="card">
+          <h3>Data Pipeline Definition</h3>
+          <p>The ingestion layer will validate required columns, remove cancellations, remove non-positive sales, normalize invoice timestamps, and derive reusable metrics including <code>Revenue</code> and <code>YearMonth</code>.</p>
+          <ul class="clean">
+            <li>Missing required schema columns will raise early pipeline failures.</li>
+            <li>Customer-level aggregates will feed RFM and cohort computations.</li>
+            <li>Time-contiguous daily series will be synthesized for forecasting stability.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Forecasting and Analytical Services</h3>
+          <p>The forecasting service will use additive Holt-Winters with weekly seasonality and will return both historical and projected series to support chart overlays and export workflows.</p>
+          <ul class="clean">
+            <li>Forecast horizon will be configurable between 7 and 90 days.</li>
+            <li>Service-level runtime exceptions will map to deterministic HTTP 422 errors.</li>
+            <li>Basket and cohort services will be isolated for unit-level testability.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div id="s6" class="sec-head">6 - Project Build Plan and Milestones</div>
+      <div class="table-wrap">
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Phase</th>
+                <th>Timebox</th>
+                <th>Build Deliverables</th>
+                <th>Exit Criteria</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>P1 Foundation</td>
+                <td>Week 1</td>
+                <td>Repo scaffolding, dependency lock, FastAPI boot app, Vite shell, basic routing, environment templates.</td>
+                <td>Backend and frontend will run locally with health check and CI smoke pass.</td>
+              </tr>
+              <tr>
+                <td>P2 Data Core</td>
+                <td>Week 1-2</td>
+                <td>Data loader, cleaning contracts, lifecycle preload, shared filter dependencies.</td>
+                <td>Data validations and date filters will pass with deterministic fixtures.</td>
+              </tr>
+              <tr>
+                <td>P3 Analytics APIs</td>
+                <td>Week 2-3</td>
+                <td>Summary, customer, geographic, basket, cohort, forecast routers + schema models + cache layers.</td>
+                <td>All analytics endpoints will return schema-valid JSON and edge-case 422 responses.</td>
+              </tr>
+              <tr>
+                <td>P4 Frontend Experience</td>
+                <td>Week 3-4</td>
+                <td>Dashboard layout, top bar, sidebar, reusable UI primitives, module pages, chart + table rendering.</td>
+                <td>All seven routes will show data-bound states, loading states, and empty states.</td>
+              </tr>
+              <tr>
+                <td>P5 AI Assistant</td>
+                <td>Week 4</td>
+                <td>Chat route, guarded LLM integration, security flag gating, prompt boundaries, fallback behaviors.</td>
+                <td>Chat will remain opt-in and produce controlled answers against loaded dataframe only.</td>
+              </tr>
+              <tr>
+                <td>P6 Stabilization</td>
+                <td>Week 5</td>
+                <td>End-to-end tests, performance pass, logging hardening, release docs, rollback checklist.</td>
+                <td>Release candidate will satisfy latency, reliability, and observability gates.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="s7" class="sec-head">7 - QA Strategy and Release Readiness</div>
+      <details open>
+        <summary>Test Strategy</summary>
+        <div>
+          The QA pipeline will include unit tests for data transformations and services, API contract tests for every route, and frontend integration tests for each dashboard page. A release will require a green run across backend tests, frontend lint/build, and basic user-journey checks.
+        </div>
+      </details>
+      <details>
+        <summary>Release Gates</summary>
+        <div>
+          Release readiness will require reproducible local setup, documented environment variables, migration-free startup, and validated fallback behavior for missing chat credentials. Each release candidate will include known limitations and explicit post-release monitoring checkpoints.
+        </div>
+      </details>
+
+      <div id="s8" class="sec-head">8 - Risks, Dependencies, and Mitigations</div>
+      <div class="table-wrap">
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Risk Area</th>
+                <th>Future Risk</th>
+                <th>Mitigation Plan</th>
+                <th>Owner</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Data Quality Drift</td>
+                <td>Incoming CSV structure may shift and break required-column assumptions.</td>
+                <td>Schema assertions and synthetic fixtures will be maintained for regression protection.</td>
+                <td>Data Engineering</td>
+              </tr>
+              <tr>
+                <td>Forecast Fragility</td>
+                <td>Sparse date ranges may degrade smoothing model stability.</td>
+                <td>Service will return controlled 422 errors and fallback messaging in UI.</td>
+                <td>Analytics Engineering</td>
+              </tr>
+              <tr>
+                <td>Chat Security</td>
+                <td>Dangerous code execution mode may expose local environment risk.</td>
+                <td>Default-deny policy with explicit environment flag and trusted-only documentation.</td>
+                <td>Platform Owner</td>
+              </tr>
+              <tr>
+                <td>Performance</td>
+                <td>Repeated heavy computations may raise latency under burst traffic.</td>
+                <td>TTL caching, route-level throttling, and lazy chart fetching will be implemented.</td>
+                <td>Backend Team</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: "base",
+      layout: "elk",
+      themeVariables: {
+        fontFamily: "IBM Plex Sans",
+        fontSize: "17px",
+        primaryColor: "#0ea5e9",
+        primaryTextColor: "#0f172a",
+        primaryBorderColor: "#0369a1",
+        secondaryColor: "#14b8a6",
+        tertiaryColor: "#f59e0b",
+        lineColor: "#4b5563"
+      },
+      flowchart: { curve: "basis" }
+    });
+
+    (function () {
+      const toc = document.getElementById("toc");
+      const links = toc.querySelectorAll("a");
+      const sections = [];
+      links.forEach((link) => {
+        const id = link.getAttribute("href").slice(1);
+        const el = document.getElementById(id);
+        if (el) sections.push({ link, el });
+      });
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            links.forEach((l) => l.classList.remove("active"));
+            const found = sections.find((s) => s.el === entry.target);
+            if (found) {
+              found.link.classList.add("active");
+              if (window.innerWidth <= 1000) {
+                found.link.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+              }
+            }
+          }
+        });
+      }, { rootMargin: "-10% 0px -80% 0px" });
+      sections.forEach((s) => observer.observe(s.el));
+    })();
+
+    (function () {
+      const stage = document.getElementById("stage");
+      const root = document.getElementById("diagramRoot");
+      const controls = document.querySelectorAll(".zoom-controls button");
+      let zoom = 1.5;
+      let isDragging = false;
+      let startX = 0;
+      let startY = 0;
+      let left = 0;
+      let top = 0;
+
+      function applyZoom() {
+        root.style.transform = "scale(" + zoom.toFixed(2) + ")";
+        stage.style.cursor = zoom > 1 ? "grab" : "default";
+      }
+      function clamp(v, min, max) { return Math.min(max, Math.max(min, v)); }
+
+      controls.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const action = btn.getAttribute("data-zoom");
+          if (action === "in") zoom = clamp(zoom + 0.15, 0.6, 3);
+          if (action === "out") zoom = clamp(zoom - 0.15, 0.6, 3);
+          if (action === "reset") {
+            zoom = 1.5;
+            stage.scrollLeft = 0;
+            stage.scrollTop = 0;
+          }
+          applyZoom();
+        });
+      });
+
+      stage.addEventListener("wheel", (e) => {
+        if (!(e.ctrlKey || e.metaKey)) return;
+        e.preventDefault();
+        zoom = clamp(zoom + (e.deltaY < 0 ? 0.1 : -0.1), 0.6, 3);
+        applyZoom();
+      }, { passive: false });
+
+      stage.addEventListener("mousedown", (e) => {
+        if (zoom <= 1) return;
+        isDragging = true;
+        stage.style.cursor = "grabbing";
+        startX = e.clientX;
+        startY = e.clientY;
+        left = stage.scrollLeft;
+        top = stage.scrollTop;
+      });
+      window.addEventListener("mouseup", () => {
+        isDragging = false;
+        stage.style.cursor = zoom > 1 ? "grab" : "default";
+      });
+      window.addEventListener("mousemove", (e) => {
+        if (!isDragging) return;
+        stage.scrollLeft = left - (e.clientX - startX);
+        stage.scrollTop = top - (e.clientY - startY);
+      });
+
+      applyZoom();
+    })();
+  </script>
+</body>
+</html>
